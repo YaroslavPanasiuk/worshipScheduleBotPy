@@ -1,0 +1,145 @@
+<html>
+<head>
+<title>main.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #808080;}
+.s3 { color: #6a8759;}
+.s4 { color: #629755; font-style: italic;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+main.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">print_function</span>
+<span class="s0">import </span><span class="s1">os</span>
+<span class="s0">import </span><span class="s1">time</span>
+
+<span class="s0">import </span><span class="s1">telebot</span>
+<span class="s0">import </span><span class="s1">datetime</span>
+<span class="s0">import </span><span class="s1">os.path</span>
+
+<span class="s0">from </span><span class="s1">google.auth.transport.requests </span><span class="s0">import </span><span class="s1">Request</span>
+<span class="s0">from </span><span class="s1">google.oauth2.credentials </span><span class="s0">import </span><span class="s1">Credentials</span>
+<span class="s0">from </span><span class="s1">google_auth_oauthlib.flow </span><span class="s0">import </span><span class="s1">InstalledAppFlow</span>
+<span class="s0">from </span><span class="s1">googleapiclient.discovery </span><span class="s0">import </span><span class="s1">build</span>
+<span class="s0">from </span><span class="s1">googleapiclient.errors </span><span class="s0">import </span><span class="s1">HttpError</span>
+
+<span class="s2"># If modifying these scopes, delete the file token.json.</span>
+<span class="s1">SCOPES = [</span><span class="s3">'https://www.googleapis.com/auth/spreadsheets.readonly'</span><span class="s1">]</span>
+
+<span class="s2"># The ID and range of a sample spreadsheet.</span>
+<span class="s1">SAMPLE_SPREADSHEET_ID = </span><span class="s3">&quot;1wM3M_WVf7YtEfSar1dZ2-2cQPY3iA8V4cSGjJnmJbmY&quot;</span>
+<span class="s1">SAMPLE_RANGE_NAME = </span><span class="s3">&quot;розклад!A1:C10000&quot;</span>
+
+
+<span class="s0">def </span><span class="s1">main():</span>
+    <span class="s4">&quot;&quot;&quot;Shows basic usage of the Sheets API. 
+    Prints values from a sample spreadsheet. 
+    &quot;&quot;&quot;</span>
+    <span class="s1">creds = </span><span class="s0">None</span>
+    <span class="s2"># The file token.json stores the user's access and refresh tokens, and is</span>
+    <span class="s2"># created automatically when the authorization flow completes for the first</span>
+    <span class="s2"># time.</span>
+    <span class="s0">if </span><span class="s1">os.path.exists(</span><span class="s3">'token.json'</span><span class="s1">):</span>
+        <span class="s1">creds = Credentials.from_authorized_user_file(</span><span class="s3">'token.json'</span><span class="s0">, </span><span class="s1">SCOPES)</span>
+    <span class="s2"># If there are no (valid) credentials available, let the user log in.</span>
+    <span class="s0">if not </span><span class="s1">creds </span><span class="s0">or not </span><span class="s1">creds.valid:</span>
+        <span class="s0">if </span><span class="s1">creds </span><span class="s0">and </span><span class="s1">creds.expired </span><span class="s0">and </span><span class="s1">creds.refresh_token:</span>
+            <span class="s1">creds.refresh(Request())</span>
+        <span class="s0">else</span><span class="s1">:</span>
+            <span class="s1">flow = InstalledAppFlow.from_client_secrets_file(</span>
+                <span class="s3">'credentials.json'</span><span class="s0">, </span><span class="s1">SCOPES)</span>
+            <span class="s1">creds = flow.run_local_server(port=</span><span class="s5">0</span><span class="s1">)</span>
+        <span class="s2"># Save the credentials for the next run</span>
+        <span class="s0">with </span><span class="s1">open(</span><span class="s3">'token.json'</span><span class="s0">, </span><span class="s3">'w'</span><span class="s1">) </span><span class="s0">as </span><span class="s1">token:</span>
+            <span class="s1">token.write(creds.to_json())</span>
+
+    <span class="s0">try</span><span class="s1">:</span>
+        <span class="s1">service = build(</span><span class="s3">'sheets'</span><span class="s0">, </span><span class="s3">'v4'</span><span class="s0">, </span><span class="s1">credentials=creds)</span>
+
+        <span class="s2"># Call the Sheets API</span>
+        <span class="s1">sheet = service.spreadsheets()</span>
+        <span class="s1">result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID</span><span class="s0">,</span>
+                                    <span class="s1">range=SAMPLE_RANGE_NAME).execute()</span>
+        <span class="s1">values = result.get(</span><span class="s3">'values'</span><span class="s0">, </span><span class="s1">[])</span>
+
+        <span class="s0">if not </span><span class="s1">values:</span>
+            <span class="s1">print(</span><span class="s3">'No data found.'</span><span class="s1">)</span>
+            <span class="s0">return</span>
+
+        <span class="s1">print(</span><span class="s3">'Name, Major:'</span><span class="s1">)</span>
+        <span class="s0">for </span><span class="s1">row </span><span class="s0">in </span><span class="s1">values:</span>
+            <span class="s2"># Print columns A and E, which correspond to indices 0 and 4.</span>
+            <span class="s1">print(</span><span class="s3">'%s, %s' </span><span class="s1">% (row[</span><span class="s5">0</span><span class="s1">]</span><span class="s0">, </span><span class="s1">row[</span><span class="s5">2</span><span class="s1">]))</span>
+    <span class="s0">except </span><span class="s1">HttpError </span><span class="s0">as </span><span class="s1">err:</span>
+        <span class="s1">print(err)</span>
+
+
+<span class="s0">def </span><span class="s1">get_next_days(date</span><span class="s0">, </span><span class="s1">count):</span>
+    <span class="s1">creds = </span><span class="s0">None</span>
+    <span class="s0">if </span><span class="s1">os.path.exists(</span><span class="s3">'token.json'</span><span class="s1">):</span>
+        <span class="s1">creds = Credentials.from_authorized_user_file(</span><span class="s3">'token.json'</span><span class="s0">, </span><span class="s1">SCOPES)</span>
+    <span class="s0">if not </span><span class="s1">creds </span><span class="s0">or not </span><span class="s1">creds.valid:</span>
+        <span class="s0">if </span><span class="s1">creds </span><span class="s0">and </span><span class="s1">creds.expired </span><span class="s0">and </span><span class="s1">creds.refresh_token:</span>
+            <span class="s1">creds.refresh(Request())</span>
+        <span class="s0">else</span><span class="s1">:</span>
+            <span class="s1">flow = InstalledAppFlow.from_client_secrets_file(</span>
+                <span class="s3">'credentials.json'</span><span class="s0">, </span><span class="s1">SCOPES)</span>
+            <span class="s1">creds = flow.run_local_server(port=</span><span class="s5">0</span><span class="s1">)</span>
+        <span class="s0">with </span><span class="s1">open(</span><span class="s3">'token.json'</span><span class="s0">, </span><span class="s3">'w'</span><span class="s1">) </span><span class="s0">as </span><span class="s1">token:</span>
+            <span class="s1">token.write(creds.to_json())</span>
+
+    <span class="s0">try</span><span class="s1">:</span>
+        <span class="s1">service = build(</span><span class="s3">'sheets'</span><span class="s0">, </span><span class="s3">'v4'</span><span class="s0">, </span><span class="s1">credentials=creds)</span>
+        <span class="s1">sheet = service.spreadsheets()</span>
+        <span class="s1">result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID</span><span class="s0">,</span><span class="s1">range=SAMPLE_RANGE_NAME).execute()</span>
+        <span class="s1">values = result.get(</span><span class="s3">'values'</span><span class="s0">, </span><span class="s1">[])</span>
+
+        <span class="s0">if not </span><span class="s1">values:</span>
+            <span class="s1">print(</span><span class="s3">'No data found.'</span><span class="s1">)</span>
+            <span class="s0">return</span>
+
+    <span class="s0">except </span><span class="s1">HttpError </span><span class="s0">as </span><span class="s1">err:</span>
+        <span class="s1">print(err)</span>
+    <span class="s1">output = </span><span class="s3">&quot;&quot;</span>
+    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(len(values)):</span>
+        <span class="s0">if </span><span class="s1">values[i][</span><span class="s5">0</span><span class="s1">] == date:</span>
+            <span class="s0">for </span><span class="s1">j </span><span class="s0">in </span><span class="s1">range(count):</span>
+                <span class="s1">output += </span><span class="s3">'%s %s %s</span><span class="s0">\n</span><span class="s3">' </span><span class="s1">% (values[i+j][</span><span class="s5">0</span><span class="s1">]</span><span class="s0">, </span><span class="s1">values[i+j][</span><span class="s5">1</span><span class="s1">]</span><span class="s0">, </span><span class="s1">values[i+j][</span><span class="s5">2</span><span class="s1">])</span>
+    <span class="s0">return </span><span class="s1">output</span>
+
+
+<span class="s0">def </span><span class="s1">next_monday(date):</span>
+    <span class="s1">days_to_monday = </span><span class="s5">7 </span><span class="s1">- date.weekday()</span>
+    <span class="s1">result = date + datetime.timedelta(days=days_to_monday)</span>
+    <span class="s0">return </span><span class="s1">result</span>
+
+
+<span class="s0">if </span><span class="s1">__name__ == </span><span class="s3">'__main__'</span><span class="s1">:</span>
+    <span class="s1">date = datetime.date(</span><span class="s5">2023</span><span class="s0">, </span><span class="s5">7</span><span class="s0">, </span><span class="s5">10</span><span class="s1">)</span>
+    <span class="s1">BOT_TOKEN = </span><span class="s3">'6334981753:AAFADpyUu-qupi7SCxtIjpRM8ZKjuximVPw'</span>
+    <span class="s1">bot = telebot.TeleBot(BOT_TOKEN)</span>
+    <span class="s1">time_to_send_message = datetime.datetime(next_monday(datetime.date.today()).year</span><span class="s0">,</span>
+                                             <span class="s1">next_monday(datetime.date.today()).month</span><span class="s0">,</span>
+                                             <span class="s1">next_monday(datetime.date.today()).day</span><span class="s0">, </span><span class="s5">10</span><span class="s1">)</span>
+    <span class="s1">print(time_to_send_message)</span>
+    <span class="s0">while True</span><span class="s1">:</span>
+        <span class="s1">bot.send_message(</span><span class="s5">388098248</span><span class="s0">, </span><span class="s1">get_next_days(time_to_send_message.strftime(</span><span class="s3">&quot;%d.%m.%Y&quot;</span><span class="s1">)</span><span class="s0">, </span><span class="s5">7</span><span class="s1">))</span>
+        <span class="s0">if </span><span class="s1">datetime.datetime.now() &gt; time_to_send_message:</span>
+            <span class="s1">bot.send_message(</span><span class="s5">388098248</span><span class="s0">, </span><span class="s1">get_next_days(time_to_send_message.strftime(</span><span class="s3">&quot;%d.%m.%Y&quot;</span><span class="s1">)</span><span class="s0">, </span><span class="s5">7</span><span class="s1">))</span>
+            <span class="s1">time_to_send_message = datetime.datetime(next_monday(datetime.date.today()).year</span><span class="s0">,</span>
+                                                     <span class="s1">next_monday(datetime.date.today()).month</span><span class="s0">,</span>
+                                                     <span class="s1">next_monday(datetime.date.today()).day</span><span class="s0">, </span><span class="s5">10</span><span class="s1">)</span>
+        <span class="s1">time.sleep(</span><span class="s5">360</span><span class="s1">)</span>
+
+
+</pre>
+</body>
+</html>
